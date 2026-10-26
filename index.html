@@ -54,8 +54,8 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
       <input type="text" id="nama" maxlength="100" placeholder="Contoh: Ahmad Fulan bin Abdullah" autocomplete="name">
 
       <label for="doa">Doa yang dititipkan</label>
-      <textarea id="doa" maxlength="2000" placeholder="Tuliskan doa dan hajat Anda di sini…"></textarea>
-      <div class="count"><span id="cnt">0</span>/2000</div>
+      <textarea id="doa" placeholder="Tuliskan doa dan hajat Anda di sini…"></textarea>
+      <div class="count"><span id="cnt">0</span> karakter</div>
 
       <label>Foto <span style="font-weight:400;color:#7a8680">(opsional)</span></label>
       <div class="photo-btns">
@@ -95,7 +95,7 @@ if (CONFIG.NAMA_JAMAAH) {
   $('#intro').textContent = 'Titipkan nama dan doa Anda untuk ' + CONFIG.NAMA_JAMAAH + '. Insya Allah akan dibacakan di Tanah Suci.';
 }
 
-$('#doa').addEventListener('input', (e) => { $('#cnt').textContent = e.target.value.length; });
+$('#doa').addEventListener('input', (e) => { $('#cnt').textContent = e.target.value.length.toLocaleString('id-ID'); });
 $('#btnCam').onclick = () => $('#inCam').click();
 $('#btnGal').onclick = () => $('#inGal').click();
 $('#inCam').onchange = (e) => pick(e.target.files[0]);

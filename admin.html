@@ -195,7 +195,6 @@ async function render(noAnim) {
 
   // ukuran huruf menyesuaikan panjang doa (HP: tetap besar & jelas)
   const len = it.doa.length;
-  const fs = len < 80 ? 32 : len < 180 ? 28 : len < 350 ? 25 : len < 600 ? 22 : len < 1000 ? 20 : 18;
 
   const card = document.createElement('div');
   card.className = 'card';
@@ -216,16 +215,32 @@ async function render(noAnim) {
   dt.textContent = it.waktu ? new Date(it.waktu).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   const sep = document.createElement('div'); sep.className = 'sep';
   const doa = document.createElement('div'); doa.className = 'doa'; doa.textContent = it.doa;
-  doa.style.setProperty('--fs', fs + 'px');
   tx.append(nm, dt);
   const hd = document.createElement('div'); hd.className = 'hd'; hd.append(ph, tx);
 
   sc.append(hd, sep, doa); card.appendChild(sc);
   stage.replaceChildren(card);
+  fitText();
   $('#cn').textContent = (idx + 1) + ' / ' + items.length;
   $('#prev').disabled = $('#next').disabled = items.length < 2;
   try { localStorage.setItem(LS_POS, it.id); } catch (_) {}
 }
+
+/* Pas satu layar: huruf sebesar mungkin (maks 32/38 px), turun sampai 10 px.
+   Jika di 10 px masih tidak muat, baru bisa digulir. */
+function fitText() {
+  const doa = document.querySelector('.doa'), sc = document.querySelector('.scroll');
+  if (!doa || !sc) return;
+  const MIN = 10, MAX = window.innerWidth >= 800 ? 38 : 32;
+  let lo = MIN, hi = MAX, best = MIN;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    doa.style.fontSize = mid + 'px';
+    if (sc.scrollHeight <= sc.clientHeight + 1) { best = mid; lo = mid + 1; } else hi = mid - 1;
+  }
+  doa.style.fontSize = best + 'px';
+}
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(fitText, 120); });
 
 function go(d) { if (!items.length) return; dir = d; idx = (idx + d + items.length) % items.length; render(); }
 
