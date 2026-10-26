@@ -29,15 +29,20 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background
 .stage{flex:1;min-height:0;padding:4px 12px 8px;display:flex}
 .card{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--cream);color:var(--ink);border-radius:20px;overflow:hidden;box-shadow:0 12px 36px rgba(0,0,0,.4);animation:in .3s ease}
 @keyframes in{from{opacity:.0;transform:translateX(var(--dx,14px))}to{opacity:1;transform:none}}
-.scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 18px 22px}
-.ph{width:100%;max-height:42vh;border-radius:14px;overflow:hidden;background:#e6efe9;margin-bottom:16px;display:flex;justify-content:center}
-.ph img{display:block;max-width:100%;max-height:42vh;width:auto;height:auto;object-fit:contain}
+.scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 18px 22px}
+/* foto kecil (thumbnail bulat) di samping nama; ketuk untuk memperbesar */
+.hd{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.ph{flex:none;width:76px;height:76px;border-radius:50%;overflow:hidden;background:#e6efe9;border:3px solid var(--gold);cursor:zoom-in;display:grid;place-items:center}
+.ph img{display:block;width:100%;height:100%;object-fit:cover}
 .ph.none{display:none}
-.ph .ld{padding:26px 12px;font-size:14px;color:#5b6a63;text-align:center}
-.nm{font-weight:800;font-size:clamp(22px,6vw,34px);line-height:1.2;color:var(--g)}
-.dt{font-size:14px;color:#5b6a63;margin:5px 0 14px}
-.sep{height:3px;width:56px;background:var(--gold);border-radius:3px;margin-bottom:14px}
-.doa{line-height:1.7;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere;font-size:var(--fs,22px);color:#16231d}
+.ph .ld{font-size:11px;color:#5b6a63;text-align:center;padding:4px;line-height:1.2}
+.id{min-width:0}
+.nm{font-weight:800;font-size:clamp(20px,5.6vw,30px);line-height:1.2;color:var(--g);overflow-wrap:anywhere}
+.dt{font-size:13px;color:#5b6a63;margin-top:3px}
+.sep{height:3px;width:56px;background:var(--gold);border-radius:3px;margin:4px 0 14px}
+.doa{line-height:1.65;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere;font-size:var(--fs,26px);color:#101a15;font-weight:500}
+.zoom{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.zoom img{max-width:100%;max-height:100%;border-radius:12px}
 
 .empty,.login{margin:auto;text-align:center;max-width:380px;line-height:1.6;padding:10px}
 .login{background:rgba(255,255,255,.1);padding:24px;border-radius:18px;width:100%}
@@ -54,14 +59,10 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background
 
 /* layar lebar (laptop/tablet): foto kiri, teks kanan */
 @media(min-width:800px){
-  .scroll{display:flex;gap:32px;align-items:flex-start;padding:30px 36px}
-  .ph{flex:0 0 38%;max-width:380px;max-height:none;margin:0}
-  .ph img{max-height:70vh}
-  .ph.none+.tx{max-width:820px;margin:0 auto}
-  .tx{flex:1;min-width:0}
-  .doa{font-size:calc(var(--fs,22px) + 4px)}
-  .stage{max-width:1100px;margin:0 auto;width:100%}
-  .bottom{max-width:1100px;margin:0 auto;width:100%}
+  .scroll{padding:30px 44px}
+  .ph{width:96px;height:96px}
+  .doa{font-size:calc(var(--fs,26px) + 6px)}
+  .stage,.bottom{max-width:900px;margin:0 auto;width:100%}
 }
 </style>
 </head>
@@ -77,6 +78,7 @@ body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background
 </div>
 
 <div class="stage" id="stage"></div>
+<div class="zoom" id="zoom" onclick="this.style.display='none'"><img id="zimg" alt=""></div>
 
 <div class="bottom">
   <button class="nav" id="prev">◀ Sebelumnya</button>
@@ -193,7 +195,7 @@ async function render(noAnim) {
 
   // ukuran huruf menyesuaikan panjang doa (HP: tetap besar & jelas)
   const len = it.doa.length;
-  const fs = len < 100 ? 28 : len < 250 ? 24 : len < 500 ? 21 : len < 900 ? 19 : 17;
+  const fs = len < 80 ? 32 : len < 180 ? 28 : len < 350 ? 25 : len < 600 ? 22 : len < 1000 ? 20 : 18;
 
   const card = document.createElement('div');
   card.className = 'card';
@@ -203,19 +205,22 @@ async function render(noAnim) {
 
   const ph = document.createElement('div');
   ph.className = 'ph' + (it.foto ? '' : ' none');
-  if (photo) { const im = document.createElement('img'); im.src = photo; im.alt = ''; ph.appendChild(im); }
-  else if (it.foto) { const l = document.createElement('div'); l.className = 'ld'; l.textContent = 'Foto belum terunduh (butuh internet sekali)'; ph.appendChild(l); }
+  if (photo) {
+    const im = document.createElement('img'); im.src = photo; im.alt = ''; ph.appendChild(im);
+    ph.onclick = () => { $('#zimg').src = photo; $('#zoom').style.display = 'flex'; };
+  } else if (it.foto) { const l = document.createElement('div'); l.className = 'ld'; l.textContent = 'Foto belum ada'; ph.appendChild(l); }
 
-  const tx = document.createElement('div'); tx.className = 'tx';
+  const tx = document.createElement('div'); tx.className = 'id';
   const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = it.nama;
   const dt = document.createElement('div'); dt.className = 'dt';
   dt.textContent = it.waktu ? new Date(it.waktu).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   const sep = document.createElement('div'); sep.className = 'sep';
   const doa = document.createElement('div'); doa.className = 'doa'; doa.textContent = it.doa;
   doa.style.setProperty('--fs', fs + 'px');
-  tx.append(nm, dt, sep, doa);
+  tx.append(nm, dt);
+  const hd = document.createElement('div'); hd.className = 'hd'; hd.append(ph, tx);
 
-  sc.append(ph, tx); card.appendChild(sc);
+  sc.append(hd, sep, doa); card.appendChild(sc);
   stage.replaceChildren(card);
   $('#cn').textContent = (idx + 1) + ' / ' + items.length;
   $('#prev').disabled = $('#next').disabled = items.length < 2;
